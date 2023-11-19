@@ -1,0 +1,30 @@
+{
+	"name": "turahe/validator",
+	"description": "identification number validator",
+	"keywords": [
+		"Validator",
+		"NIK",
+		"KK"
+	],
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "Nur Wachid",
+			"email": "wachsid@outlook.com",
+			"homepage": "https://wach.id",
+			"role": "Developer"
+		}
+	],
+	"require": {
+		"php": "^8.0"
+	},
+	"require-dev": {
+		"phpunit/phpunit": "^10.1",
+		"friendsofphp/php-cs-fixer": "^3.38"
+	},
+	"autoload": {
+		"psr-4": {
+			"Turahe\\Validator\\": "src/"
+		}
+	}
+}
