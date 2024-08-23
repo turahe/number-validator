@@ -76,7 +76,7 @@ class NIK extends Base
      *
      * @return bool
      */
-    protected function validate(): bool
+    public function validate(): bool
     {
         $length = (strlen($this->number) == 16);
         
