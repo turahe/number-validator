@@ -56,8 +56,6 @@ class NIK extends Base
         return substr($this->number, 12, 4) ?? null;
     }
     
-    //
-
     /**
      * Get gender from NIK Date
      *
@@ -70,7 +68,6 @@ class NIK extends Base
         return ($date > 40) ? 'PEREMPUAN' : 'LAKI-LAKI';
     }
     
-
     /**
      * Make sure NIK is valid
      *

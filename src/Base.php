@@ -46,7 +46,6 @@ abstract class Base
         return intval(substr($this->number, 10, 2));
     }
 
-
     /**
      * Get date in number
      * @return int
@@ -83,8 +82,6 @@ abstract class Base
         // return as object
         return (object) compact('date', 'month', 'year', 'full');
     }
-
-    //
 
     /**
      * Get age data from born date
@@ -191,8 +188,6 @@ abstract class Base
         return $this->location['provinsi'][substr($this->number, 0, 2)] ?? null;
     }
 
-    //
-
     /**
      * Get the city from NIK
      *
@@ -202,8 +197,6 @@ abstract class Base
     {
         return $this->location['kabkot'][substr($this->number, 0, 4)] ?? null;
     }
-
-    //
 
     /**
      * Get the sub-district from NIK
