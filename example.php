@@ -183,7 +183,7 @@ $time2 = (microtime(true) - $time2) * 1000;
 
 echo "OK First call (cache miss): " . number_format($time1, 4) . "ms\n";
 echo "OK Second call (cache hit): " . number_format($time2, 4) . "ms\n";
-echo "OK Performance improvement: " . round($time1 / $time2, 1) . "x faster\n";
+echo "OK Performance improvement: " . ($time2 > 0 ? round($time1 / $time2, 1) : 'infinite') . "x faster\n";
 
 echo "\n";
 

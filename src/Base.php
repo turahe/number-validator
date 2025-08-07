@@ -130,9 +130,9 @@ abstract class Base
 
         $ageDate = time() - $bornTimestamp;
 
-        $year = abs(gmdate('Y', $ageDate) - 1970);
-        $month = abs(gmdate('m', $ageDate));
-        $day = abs(gmdate('d', $ageDate) - 1);
+        $year = abs((int) gmdate('Y', $ageDate) - 1970);
+        $month = abs((int) gmdate('m', $ageDate));
+        $day = abs((int) gmdate('d', $ageDate) - 1);
 
         return $this->cachedAge = (object) compact('year', 'month', 'day');
     }
@@ -155,8 +155,8 @@ abstract class Base
 
         $diff = $bornTimestamp - time();
 
-        $month = abs(gmdate('m', $diff));
-        $day = abs(gmdate('d', $diff) - 1);
+        $month = abs((int) gmdate('m', $diff));
+        $day = abs((int) gmdate('d', $diff) - 1);
 
         return $this->cachedNextBirthday = (object) compact('month', 'day');
     }
