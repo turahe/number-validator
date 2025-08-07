@@ -16,10 +16,7 @@ class KKTest extends TestCase
 
     private const INVALID_KK = '1234567890123456';
 
-    /**
-     * @test
-     */
-    public function setMethodWithString(): void
+    public function testSetMethodWithString(): void
     {
         $kk = KK::set(self::VALID_KK);
 
@@ -27,10 +24,7 @@ class KKTest extends TestCase
         $this->assertSame(self::VALID_KK, $kk->number);
     }
 
-    /**
-     * @test
-     */
-    public function setMethodWithInteger(): void
+    public function testSetMethodWithInteger(): void
     {
         $kk = KK::set(3273012501990001);
 
@@ -38,30 +32,21 @@ class KKTest extends TestCase
         $this->assertSame('3273012501990001', $kk->number);
     }
 
-    /**
-     * @test
-     */
-    public function validateWithValidKK(): void
+    public function testValidateWithValidKK(): void
     {
         $kk = KK::set(self::VALID_KK);
 
         $this->assertTrue($kk->validate());
     }
 
-    /**
-     * @test
-     */
-    public function validateWithInvalidKK(): void
+    public function testValidateWithInvalidKK(): void
     {
         $kk = KK::set(self::INVALID_KK);
 
         $this->assertFalse($kk->validate());
     }
 
-    /**
-     * @test
-     */
-    public function parseWithValidKK(): void
+    public function testParseWithValidKK(): void
     {
         $kk = KK::set(self::VALID_KK);
         $result = $kk->parse();
@@ -73,10 +58,7 @@ class KKTest extends TestCase
         $this->assertIsString($result->postalCode);
     }
 
-    /**
-     * @test
-     */
-    public function parseWithInvalidKK(): void
+    public function testParseWithInvalidKK(): void
     {
         $kk = KK::set(self::INVALID_KK);
         $result = $kk->parse();
@@ -86,10 +68,7 @@ class KKTest extends TestCase
         $this->assertFalse(property_exists($result, 'number'));
     }
 
-    /**
-     * @test
-     */
-    public function getProvince(): void
+    public function testGetProvince(): void
     {
         $kk = KK::set(self::VALID_KK);
         $province = $kk->getProvince();
@@ -98,10 +77,7 @@ class KKTest extends TestCase
         $this->assertNotEmpty($province);
     }
 
-    /**
-     * @test
-     */
-    public function getCity(): void
+    public function testGetCity(): void
     {
         $kk = KK::set(self::VALID_KK);
         $city = $kk->getCity();
@@ -110,10 +86,7 @@ class KKTest extends TestCase
         $this->assertNotEmpty($city);
     }
 
-    /**
-     * @test
-     */
-    public function getSubDistrict(): void
+    public function testGetSubDistrict(): void
     {
         $kk = KK::set(self::VALID_KK);
         $subDistrict = $kk->getSubDistrict();
@@ -122,10 +95,7 @@ class KKTest extends TestCase
         $this->assertNotEmpty($subDistrict);
     }
 
-    /**
-     * @test
-     */
-    public function getPostalCode(): void
+    public function testGetPostalCode(): void
     {
         $kk = KK::set(self::VALID_KK);
         $postalCode = $kk->getPostalCode();
@@ -134,10 +104,7 @@ class KKTest extends TestCase
         $this->assertNotEmpty($postalCode);
     }
 
-    /**
-     * @test
-     */
-    public function constructorWithCustomWilayahPath(): void
+    public function testConstructorWithCustomWilayahPath(): void
     {
         $customPath = __DIR__ . '/../src/assets/wilayah.json';
         $kk = new KK(self::VALID_KK, $customPath);
@@ -146,10 +113,7 @@ class KKTest extends TestCase
         $this->assertSame(self::VALID_KK, $kk->number);
     }
 
-    /**
-     * @test
-     */
-    public function readonlyProperties(): void
+    public function testReadonlyProperties(): void
     {
         $kk = KK::set(self::VALID_KK);
 
@@ -158,10 +122,7 @@ class KKTest extends TestCase
         $kk->number = '1234567890123456';
     }
 
-    /**
-     * @test
-     */
-    public function typeSafety(): void
+    public function testTypeSafety(): void
     {
         // Test that the class properly handles type safety
         $kk = KK::set(self::VALID_KK);
@@ -170,10 +131,7 @@ class KKTest extends TestCase
         $this->assertIsArray($kk->location);
     }
 
-    /**
-     * @test
-     */
-    public function addressObjectStructure(): void
+    public function testAddressObjectStructure(): void
     {
         $kk = KK::set(self::VALID_KK);
         $result = $kk->parse();
@@ -188,37 +146,25 @@ class KKTest extends TestCase
         $this->assertIsString($result->address->subDistrict);
     }
 
-    /**
-     * @test
-     */
-    public function invalidKKWithShortLength(): void
+    public function testInvalidKKWithShortLength(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         KK::set('123456789012345');
     }
 
-    /**
-     * @test
-     */
-    public function invalidKKWithLongLength(): void
+    public function testInvalidKKWithLongLength(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         KK::set('12345678901234567');
     }
 
-    /**
-     * @test
-     */
-    public function invalidKKWithNonNumeric(): void
+    public function testInvalidKKWithNonNumeric(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         KK::set('123456789012345a');
     }
 
-    /**
-     * @test
-     */
-    public function getValidationErrors(): void
+    public function testGetValidationErrors(): void
     {
         $kk = KK::set(self::INVALID_KK);
         $errors = $kk->getValidationErrors();
@@ -227,10 +173,7 @@ class KKTest extends TestCase
         $this->assertNotEmpty($errors);
     }
 
-    /**
-     * @test
-     */
-    public function toArray(): void
+    public function testToArray(): void
     {
         $kk = KK::set(self::VALID_KK);
         $array = $kk->toArray();
@@ -240,10 +183,7 @@ class KKTest extends TestCase
         $this->assertSame(self::VALID_KK, $array['number']);
     }
 
-    /**
-     * @test
-     */
-    public function getFormattedNumber(): void
+    public function testGetFormattedNumber(): void
     {
         $kk = KK::set(self::VALID_KK);
         $formatted = $kk->getFormattedNumber();
@@ -252,10 +192,7 @@ class KKTest extends TestCase
         $this->assertSame('3273-0125-0199-0001', $formatted);
     }
 
-    /**
-     * @test
-     */
-    public function getRawNumber(): void
+    public function testGetRawNumber(): void
     {
         $kk = KK::set(self::VALID_KK);
         $raw = $kk->getRawNumber();

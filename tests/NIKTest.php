@@ -16,10 +16,7 @@ class NIKTest extends TestCase
 
     private const INVALID_NIK = '1234567890123456';
 
-    /**
-     * @test
-     */
-    public function setMethodWithString(): void
+    public function testSetMethodWithString(): void
     {
         $nik = NIK::set(self::VALID_NIK);
 
@@ -27,10 +24,7 @@ class NIKTest extends TestCase
         $this->assertSame(self::VALID_NIK, $nik->number);
     }
 
-    /**
-     * @test
-     */
-    public function setMethodWithInteger(): void
+    public function testSetMethodWithInteger(): void
     {
         $nik = NIK::set(3273012501990001);
 
@@ -38,30 +32,21 @@ class NIKTest extends TestCase
         $this->assertSame('3273012501990001', $nik->number);
     }
 
-    /**
-     * @test
-     */
-    public function validateWithValidNIK(): void
+    public function testValidateWithValidNIK(): void
     {
         $nik = NIK::set(self::VALID_NIK);
 
         $this->assertTrue($nik->validate());
     }
 
-    /**
-     * @test
-     */
-    public function validateWithInvalidNIK(): void
+    public function testValidateWithInvalidNIK(): void
     {
         $nik = NIK::set(self::INVALID_NIK);
 
         $this->assertFalse($nik->validate());
     }
 
-    /**
-     * @test
-     */
-    public function parseWithValidNIK(): void
+    public function testParseWithValidNIK(): void
     {
         $nik = NIK::set(self::VALID_NIK);
         $result = $nik->parse();
@@ -79,10 +64,7 @@ class NIKTest extends TestCase
         $this->assertIsString($result->postalCode);
     }
 
-    /**
-     * @test
-     */
-    public function parseWithInvalidNIK(): void
+    public function testParseWithInvalidNIK(): void
     {
         $nik = NIK::set(self::INVALID_NIK);
         $result = $nik->parse();
@@ -92,10 +74,7 @@ class NIKTest extends TestCase
         $this->assertFalse(property_exists($result, 'number'));
     }
 
-    /**
-     * @test
-     */
-    public function getGenderForMale(): void
+    public function testGetGenderForMale(): void
     {
         // NIK with date 25 (male)
         $nik = NIK::set('3273012501990001');
@@ -103,10 +82,7 @@ class NIKTest extends TestCase
         $this->assertSame('LAKI-LAKI', $nik->getGender());
     }
 
-    /**
-     * @test
-     */
-    public function getGenderForFemale(): void
+    public function testGetGenderForFemale(): void
     {
         // NIK with date 65 (female: 65-40=25)
         $nik = NIK::set('3273016501990001');
@@ -114,10 +90,7 @@ class NIKTest extends TestCase
         $this->assertSame('PEREMPUAN', $nik->getGender());
     }
 
-    /**
-     * @test
-     */
-    public function getUniqueCode(): void
+    public function testGetUniqueCode(): void
     {
         $nik = NIK::set(self::VALID_NIK);
 
@@ -131,10 +104,7 @@ class NIKTest extends TestCase
         $this->assertSame('0001', $uniqueCode);
     }
 
-    /**
-     * @test
-     */
-    public function getBornDate(): void
+    public function testGetBornDate(): void
     {
         $nik = NIK::set(self::VALID_NIK);
         $bornDate = $nik->getBornDate();
@@ -152,10 +122,7 @@ class NIKTest extends TestCase
         $this->assertSame('25-01-1999', $bornDate->full);
     }
 
-    /**
-     * @test
-     */
-    public function getAge(): void
+    public function testGetAge(): void
     {
         $nik = NIK::set(self::VALID_NIK);
         $age = $nik->getAge();
@@ -170,10 +137,7 @@ class NIKTest extends TestCase
         $this->assertLessThan(30, $age->year);
     }
 
-    /**
-     * @test
-     */
-    public function getNextBirthday(): void
+    public function testGetNextBirthday(): void
     {
         $nik = NIK::set(self::VALID_NIK);
         $nextBirthday = $nik->getNextBirthday();
@@ -187,10 +151,7 @@ class NIKTest extends TestCase
         $this->assertGreaterThanOrEqual(0, $nextBirthday->day);
     }
 
-    /**
-     * @test
-     */
-    public function getZodiac(): void
+    public function testGetZodiac(): void
     {
         $nik = NIK::set(self::VALID_NIK);
         $zodiac = $nik->getZodiac();
@@ -202,10 +163,7 @@ class NIKTest extends TestCase
         $this->assertSame('Aquarius', $zodiac);
     }
 
-    /**
-     * @test
-     */
-    public function getProvince(): void
+    public function testGetProvince(): void
     {
         $nik = NIK::set(self::VALID_NIK);
         $province = $nik->getProvince();
@@ -214,10 +172,7 @@ class NIKTest extends TestCase
         $this->assertNotEmpty($province);
     }
 
-    /**
-     * @test
-     */
-    public function getCity(): void
+    public function testGetCity(): void
     {
         $nik = NIK::set(self::VALID_NIK);
         $city = $nik->getCity();
@@ -226,10 +181,7 @@ class NIKTest extends TestCase
         $this->assertNotEmpty($city);
     }
 
-    /**
-     * @test
-     */
-    public function getSubDistrict(): void
+    public function testGetSubDistrict(): void
     {
         $nik = NIK::set(self::VALID_NIK);
         $subDistrict = $nik->getSubDistrict();
@@ -238,10 +190,7 @@ class NIKTest extends TestCase
         $this->assertNotEmpty($subDistrict);
     }
 
-    /**
-     * @test
-     */
-    public function getPostalCode(): void
+    public function testGetPostalCode(): void
     {
         $nik = NIK::set(self::VALID_NIK);
         $postalCode = $nik->getPostalCode();
@@ -250,10 +199,7 @@ class NIKTest extends TestCase
         $this->assertNotEmpty($postalCode);
     }
 
-    /**
-     * @test
-     */
-    public function constructorWithCustomWilayahPath(): void
+    public function testConstructorWithCustomWilayahPath(): void
     {
         $customPath = __DIR__ . '/../src/assets/wilayah.json';
         $nik = new NIK(self::VALID_NIK, $customPath);
@@ -262,10 +208,7 @@ class NIKTest extends TestCase
         $this->assertSame(self::VALID_NIK, $nik->number);
     }
 
-    /**
-     * @test
-     */
-    public function readonlyProperties(): void
+    public function testReadonlyProperties(): void
     {
         $nik = NIK::set(self::VALID_NIK);
 
@@ -274,10 +217,7 @@ class NIKTest extends TestCase
         $nik->number = '1234567890123456';
     }
 
-    /**
-     * @test
-     */
-    public function typeSafety(): void
+    public function testTypeSafety(): void
     {
         // Test that the class properly handles type safety
         $nik = NIK::set(self::VALID_NIK);
@@ -286,10 +226,7 @@ class NIKTest extends TestCase
         $this->assertIsArray($nik->location);
     }
 
-    /**
-     * @test
-     */
-    public function getValidationErrors(): void
+    public function testGetValidationErrors(): void
     {
         $nik = NIK::set(self::INVALID_NIK);
         $errors = $nik->getValidationErrors();
@@ -298,10 +235,7 @@ class NIKTest extends TestCase
         $this->assertNotEmpty($errors);
     }
 
-    /**
-     * @test
-     */
-    public function toArray(): void
+    public function testToArray(): void
     {
         $nik = NIK::set(self::VALID_NIK);
         $array = $nik->toArray();
@@ -319,28 +253,19 @@ class NIKTest extends TestCase
         $this->assertIsString($array['postalCode']);
     }
 
-    /**
-     * @test
-     */
-    public function invalidNIKWithShortLength(): void
+    public function testInvalidNIKWithShortLength(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         NIK::set('123456789012345');
     }
 
-    /**
-     * @test
-     */
-    public function invalidNIKWithLongLength(): void
+    public function testInvalidNIKWithLongLength(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         NIK::set('12345678901234567');
     }
 
-    /**
-     * @test
-     */
-    public function invalidNIKWithNonNumeric(): void
+    public function testInvalidNIKWithNonNumeric(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         NIK::set('123456789012345a');
