@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types = 1);
+
 namespace Turahe\Validator\Tests;
 
 use PHPUnit\Framework\TestCase;
@@ -13,75 +16,99 @@ class TestBase extends Base
     }
 }
 
+/**
+ * @small
+ */
 class BaseTest extends TestCase
 {
     private const TEST_NUMBER = '3273012501990001';
 
-    public function testConstructor(): void
+    /**
+     * @test
+     */
+    public function constructor(): void
     {
         $base = new TestBase(self::TEST_NUMBER);
-        
-        $this->assertEquals(self::TEST_NUMBER, $base->number);
+
+        $this->assertSame(self::TEST_NUMBER, $base->number);
         $this->assertIsArray($base->location);
         $this->assertNotEmpty($base->location);
     }
 
-    public function testConstructorWithCustomWilayahPath(): void
+    /**
+     * @test
+     */
+    public function constructorWithCustomWilayahPath(): void
     {
         $customPath = __DIR__ . '/../src/assets/wilayah.json';
         $base = new TestBase(self::TEST_NUMBER, $customPath);
-        
-        $this->assertEquals(self::TEST_NUMBER, $base->number);
+
+        $this->assertSame(self::TEST_NUMBER, $base->number);
         $this->assertIsArray($base->location);
     }
 
-    public function testGetCurrentYear(): void
+    /**
+     * @test
+     */
+    public function getCurrentYear(): void
     {
         $base = new TestBase(self::TEST_NUMBER);
         $currentYear = $base->getCurrentYear();
-        
+
         $this->assertIsInt($currentYear);
         $this->assertGreaterThanOrEqual(20, $currentYear);
         $this->assertLessThanOrEqual(99, $currentYear);
     }
 
-    public function testGetNIKYear(): void
+    /**
+     * @test
+     */
+    public function getNIKYear(): void
     {
         $base = new TestBase(self::TEST_NUMBER);
         $nikYear = $base->getNIKYear();
-        
+
         $this->assertIsInt($nikYear);
-        $this->assertEquals(99, $nikYear); // From TEST_NUMBER: 3273012501990001
+        $this->assertSame(99, $nikYear); // From TEST_NUMBER: 3273012501990001
     }
 
-    public function testGetNIKDate(): void
+    /**
+     * @test
+     */
+    public function getNIKDate(): void
     {
         $base = new TestBase(self::TEST_NUMBER);
         $nikDate = $base->getNIKDate();
-        
+
         $this->assertIsInt($nikDate);
-        $this->assertEquals(25, $nikDate); // From TEST_NUMBER: 3273012501990001
+        $this->assertSame(25, $nikDate); // From TEST_NUMBER: 3273012501990001
     }
 
-    public function testGetBornDate(): void
+    /**
+     * @test
+     */
+    public function getBornDate(): void
     {
         $base = new TestBase(self::TEST_NUMBER);
         $bornDate = $base->getBornDate();
-        
+
         $this->assertIsObject($bornDate);
         $this->assertTrue(property_exists($bornDate, 'date'));
         $this->assertTrue(property_exists($bornDate, 'month'));
         $this->assertTrue(property_exists($bornDate, 'year'));
         $this->assertTrue(property_exists($bornDate, 'full'));
-        
+
         // Check specific values for the test number
-        $this->assertEquals('25', $bornDate->date);
-        $this->assertEquals('01', $bornDate->month);
-        $this->assertEquals('1999', $bornDate->year);
-        $this->assertEquals('25-01-1999', $bornDate->full);
+        $this->assertSame('25', $bornDate->date);
+        $this->assertSame('01', $bornDate->month);
+        $this->assertSame('1999', $bornDate->year);
+        $this->assertSame('25-01-1999', $bornDate->full);
     }
 
-    public function testGetBornDateForFemale(): void
+    /**
+     * @test
+     */
+    public function getBornDateForFemale(): void
     {
         // Create a test class that returns female gender
         $femaleBase = new class('3273016501990001') extends Base {
@@ -90,118 +117,144 @@ class BaseTest extends TestCase
                 return 'PEREMPUAN';
             }
         };
-        
+
         $bornDate = $femaleBase->getBornDate();
-        
+
         // For female, the date should be adjusted (65 - 40 = 25)
-        $this->assertEquals('25', $bornDate->date);
-        $this->assertEquals('01', $bornDate->month);
-        $this->assertEquals('1999', $bornDate->year);
+        $this->assertSame('25', $bornDate->date);
+        $this->assertSame('01', $bornDate->month);
+        $this->assertSame('1999', $bornDate->year);
     }
 
-    public function testGetAge(): void
+    /**
+     * @test
+     */
+    public function getAge(): void
     {
         $base = new TestBase(self::TEST_NUMBER);
         $age = $base->getAge();
-        
+
         $this->assertIsObject($age);
         $this->assertTrue(property_exists($age, 'year'));
         $this->assertTrue(property_exists($age, 'month'));
         $this->assertTrue(property_exists($age, 'day'));
-        
+
         // Age should be reasonable (born in 1999, so should be around 25 years in 2024)
         $this->assertGreaterThan(20, $age->year);
         $this->assertLessThan(30, $age->year);
     }
 
-    public function testGetNextBirthday(): void
+    /**
+     * @test
+     */
+    public function getNextBirthday(): void
     {
         $base = new TestBase(self::TEST_NUMBER);
         $nextBirthday = $base->getNextBirthday();
-        
+
         $this->assertIsObject($nextBirthday);
         $this->assertTrue(property_exists($nextBirthday, 'month'));
         $this->assertTrue(property_exists($nextBirthday, 'day'));
-        
+
         // Values should be non-negative
         $this->assertGreaterThanOrEqual(0, $nextBirthday->month);
         $this->assertGreaterThanOrEqual(0, $nextBirthday->day);
     }
 
-    public function testGetZodiac(): void
+    /**
+     * @test
+     */
+    public function getZodiac(): void
     {
         $base = new TestBase(self::TEST_NUMBER);
         $zodiac = $base->getZodiac();
-        
+
         $this->assertIsString($zodiac);
         $this->assertNotEmpty($zodiac);
-        
+
         // For January 25th, should be Aquarius
-        $this->assertEquals('Aquarius', $zodiac);
+        $this->assertSame('Aquarius', $zodiac);
     }
 
-
-
-    public function testGetProvince(): void
+    /**
+     * @test
+     */
+    public function getProvince(): void
     {
         $base = new TestBase(self::TEST_NUMBER);
         $province = $base->getProvince();
-        
+
         $this->assertIsString($province);
         $this->assertNotEmpty($province);
     }
 
-    public function testGetCity(): void
+    /**
+     * @test
+     */
+    public function getCity(): void
     {
         $base = new TestBase(self::TEST_NUMBER);
         $city = $base->getCity();
-        
+
         $this->assertIsString($city);
         $this->assertNotEmpty($city);
     }
 
-    public function testGetSubDistrict(): void
+    /**
+     * @test
+     */
+    public function getSubDistrict(): void
     {
         $base = new TestBase(self::TEST_NUMBER);
         $subDistrict = $base->getSubDistrict();
-        
+
         $this->assertIsString($subDistrict);
         $this->assertNotEmpty($subDistrict);
     }
 
-    public function testGetPostalCode(): void
+    /**
+     * @test
+     */
+    public function getPostalCode(): void
     {
         $base = new TestBase(self::TEST_NUMBER);
         $postalCode = $base->getPostalCode();
-        
+
         $this->assertIsString($postalCode);
         $this->assertNotEmpty($postalCode);
     }
 
-    public function testReadonlyProperties(): void
+    /**
+     * @test
+     */
+    public function readonlyProperties(): void
     {
         $base = new TestBase(self::TEST_NUMBER);
-        
+
         // Test that properties are readonly (should not be able to modify them)
         $this->expectException(\Error::class);
         $base->number = '1234567890123456';
     }
 
-    public function testTypeSafety(): void
+    /**
+     * @test
+     */
+    public function typeSafety(): void
     {
         $base = new TestBase(self::TEST_NUMBER);
-        
+
         $this->assertIsString($base->number);
         $this->assertIsArray($base->location);
     }
 
-
-
-    public function testNullCoalescingOperator(): void
+    /**
+     * @test
+     */
+    public function nullCoalescingOperator(): void
     {
         // Test that the null coalescing operator works correctly
         $base = new TestBase('9999999999999999');
-        
+
         $this->assertNull($base->getProvince());
         $this->assertNull($base->getCity());
         $this->assertNull($base->getSubDistrict());
