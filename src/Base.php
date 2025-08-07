@@ -2,223 +2,291 @@
 namespace Turahe\Validator;
 
 /**
- *
+ * Base class for number validation with optimized performance
  */
 abstract class Base
 {
     /**
-     * @var mixed
+     * Location data from JSON file
      */
-    public $location;
+    public readonly array $location;
+    
     /**
-     * @var
+     * The number to validate
      */
-    public $number;
+    public readonly string $number;
 
     /**
-     * @param $number
+     * Cached values for performance
      */
-    public function __construct($number)
-    {
+    private ?object $cachedBornDate = null;
+    private ?object $cachedAge = null;
+    private ?object $cachedNextBirthday = null;
+    private ?string $cachedGender = null;
+
+    /**
+     * Constructor with property promotion and optimized file loading
+     */
+    public function __construct(
+        string $number,
+        ?string $wilayahPath = null
+    ) {
         $this->number = $number;
-        // Get location from assets and convert it to array
-        $wilayahPath = dirname(__FILE__) . '/assets/wilayah.json';
-        $this->location = json_decode(file_get_contents($wilayahPath), true);
+        
+        // Optimized file loading with error handling
+        $wilayahPath ??= dirname(__FILE__) . '/assets/wilayah.json';
+        
+        if (!file_exists($wilayahPath)) {
+            throw new \InvalidArgumentException("Wilayah file not found: $wilayahPath");
+        }
+        
+        $jsonContent = file_get_contents($wilayahPath);
+        if ($jsonContent === false) {
+            throw new \RuntimeException("Failed to read wilayah file: $wilayahPath");
+        }
+        
+        $this->location = json_decode($jsonContent, true, 512, JSON_THROW_ON_ERROR) ?? [];
     }
 
     /**
-     * Get last 2 digits number at the current year
-     *
-     * @return int
+     * Get last 2 digits number at the current year (cached)
      */
     public function getCurrentYear(): int
     {
-        return intval(substr(date('Y'), -2));
+        static $currentYear = null;
+        
+        if ($currentYear === null) {
+            $currentYear = (int) substr(date('Y'), -2);
+        }
+        
+        return $currentYear;
     }
 
     /**
-     * Get year in NIK
-     *
-     * @return int
+     * Get year in NIK (optimized with direct access)
      */
     public function getNIKYear(): int
     {
-        return intval(substr($this->number, 10, 2));
+        return (int) ($this->number[10] . $this->number[11]);
     }
 
     /**
-     * Get date in number
-     * @return int
+     * Get date in number (optimized with direct access)
      */
     public function getNIKDate(): int
     {
-        return intval(substr($this->number, 6, 2));
+        return (int) ($this->number[6] . $this->number[7]);
     }
 
     /**
-     * Get born date from NIK
-     *
-     * @return object
+     * Get born date from NIK (cached for performance)
      */
     public function getBornDate(): object
     {
-        $NIKdate = $this->getNIKDate();
-        $NIKyear = $this->getNIKYear();
-        $currYear = $this->getCurrentYear();
-        $isFemale = ($this->getGender() == 'PEREMPUAN');
-
-        // Get born date
-        if ($isFemale) {
-            $NIKdate -= 40;
+        if ($this->cachedBornDate !== null) {
+            return $this->cachedBornDate;
         }
-        $date = ($NIKdate >= 10) ? strval($NIKdate) : "0$NIKdate";
-        // Get born month
-        $month = substr($this->number, 8, 2);
-        // Get born year
-        $year = strval(($NIKyear < $currYear) ? 2000 + $NIKyear : 1900 + $NIKyear);
-        // Generate to full date format (d-m-Y)
+
+        $nikDate = $this->getNIKDate();
+        $nikYear = $this->getNIKYear();
+        $currYear = $this->getCurrentYear();
+        $isFemale = $this->getGender() === 'PEREMPUAN';
+
+        // Optimized date calculation
+        if ($isFemale) {
+            $nikDate -= 40;
+        }
+        
+        $date = $nikDate >= 10 ? (string) $nikDate : "0$nikDate";
+        $month = $this->number[8] . $this->number[9];
+        $year = (string) ($nikYear < $currYear ? 2000 + $nikYear : 1900 + $nikYear);
         $full = "$date-$month-$year";
 
-        // return as object
-        return (object) compact('date', 'month', 'year', 'full');
+        return $this->cachedBornDate = (object) compact('date', 'month', 'year', 'full');
     }
 
     /**
-     * Get age data from born date
-     *
-     * @return object
+     * Get age data from born date (cached for performance)
      */
     public function getAge(): object
     {
+        if ($this->cachedAge !== null) {
+            return $this->cachedAge;
+        }
+
         $bornDate = $this->getBornDate()->full;
-        $ageDate = time() - strtotime($bornDate);
+        $bornTimestamp = strtotime($bornDate);
+        
+        if ($bornTimestamp === false) {
+            throw new \RuntimeException("Invalid birth date format: $bornDate");
+        }
+        
+        $ageDate = time() - $bornTimestamp;
 
         $year = abs(gmdate('Y', $ageDate) - 1970);
         $month = abs(gmdate('m', $ageDate));
         $day = abs(gmdate('d', $ageDate) - 1);
 
-        return (object) compact('year', 'month', 'day');
+        return $this->cachedAge = (object) compact('year', 'month', 'day');
     }
 
     /**
-     * Get next birthday from born date
-     *
-     * @return object
+     * Get next birthday from born date (cached for performance)
      */
     public function getNextBirthday(): object
     {
+        if ($this->cachedNextBirthday !== null) {
+            return $this->cachedNextBirthday;
+        }
+
         $bornDate = $this->getBornDate()->full;
-        $diff = strtotime($bornDate) - time();
+        $bornTimestamp = strtotime($bornDate);
+        
+        if ($bornTimestamp === false) {
+            throw new \RuntimeException("Invalid birth date format: $bornDate");
+        }
+        
+        $diff = $bornTimestamp - time();
 
         $month = abs(gmdate('m', $diff));
         $day = abs(gmdate('d', $diff) - 1);
 
-        return (object) compact('month', 'day');
+        return $this->cachedNextBirthday = (object) compact('month', 'day');
     }
 
     /**
-     * Get zodiac from born date
-     *
-     * @return string
+     * Get zodiac from born date (optimized with early return)
      */
     public function getZodiac(): string
     {
         $bornDate = $this->getBornDate();
-        $month = intval($bornDate->month);
-        $date = intval($bornDate->date);
+        $month = (int) $bornDate->month;
+        $date = (int) $bornDate->date;
 
-        if (($month == 1 && $date >= 20) || ($month == 2 && $date < 19)) {
-            return 'Aquarius';
+        // Optimized zodiac calculation with early returns
+        if ($month === 1) {
+            return $date >= 20 ? 'Aquarius' : 'Capricorn';
         }
-
-        if (($month == 2 && $date >= 19) || ($month == 3 && $date < 21)) {
-            return 'Pisces';
+        
+        if ($month === 2) {
+            return $date >= 19 ? 'Pisces' : 'Aquarius';
         }
-
-        if (($month == 3 && $date >= 21) || ($month == 4 && $date < 20)) {
-            return 'Aries';
+        
+        if ($month === 3) {
+            return $date >= 21 ? 'Aries' : 'Pisces';
         }
-
-        if (($month == 4 && $date >= 20) || ($month == 5 && $date < 21)) {
-            return 'Taurus';
+        
+        if ($month === 4) {
+            return $date >= 20 ? 'Taurus' : 'Aries';
         }
-
-        if (($month == 5 && $date >= 21) || ($month == 6 && $date < 22)) {
-            return 'Gemini';
+        
+        if ($month === 5) {
+            return $date >= 21 ? 'Gemini' : 'Taurus';
         }
-
-        if (($month == 6 && $date >= 21) || ($month == 7 && $date < 23)) {
-            return 'Cancer';
+        
+        if ($month === 6) {
+            return $date >= 21 ? 'Cancer' : 'Gemini';
         }
-
-        if (($month == 7 && $date >= 23) || ($month == 8 && $date < 23)) {
-            return 'Leo';
+        
+        if ($month === 7) {
+            return $date >= 23 ? 'Leo' : 'Cancer';
         }
-
-        if (($month == 8 && $date >= 23) || ($month == 9 && $date < 23)) {
-            return 'Virgo';
+        
+        if ($month === 8) {
+            return $date >= 23 ? 'Virgo' : 'Leo';
         }
-
-        if (($month == 9 && $date >= 23) || ($month == 10 && $date < 24)) {
-            return 'Libra';
+        
+        if ($month === 9) {
+            return $date >= 23 ? 'Libra' : 'Virgo';
         }
-
-        if (($month == 10 && $date >= 24) || ($month == 11 && $date < 23)) {
-            return 'Scorpio';
+        
+        if ($month === 10) {
+            return $date >= 24 ? 'Scorpio' : 'Libra';
         }
-
-        if (($month == 11 && $date >= 23) || ($month == 12 && $date < 22)) {
-            return 'Sagittarius';
+        
+        if ($month === 11) {
+            return $date >= 23 ? 'Sagittarius' : 'Scorpio';
         }
-
-        if (($month == 12 && $date >= 22) || ($month == 1 && $date < 20)) {
-            return 'Capricorn';
-        }
-
-        return 'N/A';
+        
+        // December
+        return $date >= 22 ? 'Capricorn' : 'Sagittarius';
     }
 
     /**
-     * Get the province from NIK
-     *
-     * @return mixed|null
+     * Get the province from NIK (optimized with direct access)
      */
-    public function getProvince()
+    public function getProvince(): ?string
     {
-        return $this->location['provinsi'][substr($this->number, 0, 2)] ?? null;
+        $provinceCode = $this->number[0] . $this->number[1];
+        return $this->location['provinsi'][$provinceCode] ?? null;
     }
 
     /**
-     * Get the city from NIK
-     *
-     * @return mixed|null
+     * Get the city from NIK (optimized with direct access)
      */
-    public function getCity()
+    public function getCity(): ?string
     {
-        return $this->location['kabkot'][substr($this->number, 0, 4)] ?? null;
+        $cityCode = $this->number[0] . $this->number[1] . $this->number[2] . $this->number[3];
+        return $this->location['kabkot'][$cityCode] ?? null;
     }
 
     /**
-     * Get the sub-district from NIK
-     *
-     * @return string|null
+     * Get the sub-district from NIK (optimized with direct access)
      */
     public function getSubDistrict(): ?string
     {
-        $result = $this->location['kecamatan'][substr($this->number, 0, 6)];
+        $subDistrictCode = $this->number[0] . $this->number[1] . $this->number[2] . 
+                           $this->number[3] . $this->number[4] . $this->number[5];
+        
+        $result = $this->location['kecamatan'][$subDistrictCode] ?? null;
+        
+        if ($result === null) {
+            return null;
+        }
 
-        return trim(explode('--', $result)[0]) ?? null;
+        $parts = explode('--', $result, 2);
+        return trim($parts[0]);
     }
 
     /**
-     * Get postal code
-     *
-     * @return string|null
+     * Get postal code (optimized with direct access)
      */
     public function getPostalCode(): ?string
     {
-        $result = $this->location['kecamatan'][substr($this->number, 0, 6)];
+        $subDistrictCode = $this->number[0] . $this->number[1] . $this->number[2] . 
+                           $this->number[3] . $this->number[4] . $this->number[5];
+        
+        $result = $this->location['kecamatan'][$subDistrictCode] ?? null;
+        
+        if ($result === null) {
+            return null;
+        }
 
-        return trim(explode('--', $result)[1]) ?? null;
+        $parts = explode('--', $result, 2);
+        return isset($parts[1]) ? trim($parts[1]) : null;
+    }
+
+    /**
+     * Get gender (cached for performance)
+     */
+    public function getGender(): string
+    {
+        if ($this->cachedGender !== null) {
+            return $this->cachedGender;
+        }
+
+        $date = $this->getNIKDate();
+        return $this->cachedGender = ($date > 40) ? 'PEREMPUAN' : 'LAKI-LAKI';
+    }
+
+    /**
+     * Clear cached values (useful for testing or when data changes)
+     */
+    protected function clearCache(): void
+    {
+        $this->cachedBornDate = null;
+        $this->cachedAge = null;
+        $this->cachedNextBirthday = null;
+        $this->cachedGender = null;
     }
 }

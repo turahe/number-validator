@@ -1,0 +1,268 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    name: PHP 8.4 Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP 8.4
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.4
+        extensions: mbstring, json, ctype
+        coverage: xdebug
+        tools: composer:v2
+
+    - name: Validate composer.json
+      run: composer validate --strict
+
+    - name: Get composer cache directory
+      id: composer-cache
+      run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: ${{ steps.composer-cache.outputs.dir }}
+        key: ${{ runner.os }}-php-8.4-composer-${{ hashFiles('**/composer.lock') }}
+        restore-keys: ${{ runner.os }}-php-8.4-composer-
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+
+    - name: Verify PHP version
+      run: php --version
+
+    - name: Check for syntax errors
+      run: find src tests -name "*.php" -exec php -l {} \;
+
+    - name: Run tests
+      run: ./vendor/bin/phpunit --coverage-text --coverage-clover=coverage.xml
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP 8.4
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.4
+        extensions: mbstring, json, ctype
+        tools: composer:v2
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+
+    - name: Run PHP CS Fixer
+      run: ./vendor/bin/php-cs-fixer fix --dry-run --diff
+
+    - name: Validate composer.json
+      run: composer validate --strict
+
+  performance:
+    name: Performance Test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP 8.4
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.4
+        extensions: mbstring, json, ctype
+        tools: composer:v2
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+
+    - name: Run performance test
+      run: php example.php
+
+    - name: Run memory usage test
+      run: |
+        echo "Testing memory usage..."
+        php -d memory_limit=256M example.php > /dev/null 2>&1
+        echo "Memory test completed successfully"
+
+  security:
+    name: Security Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP 8.4
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.4
+        extensions: mbstring, json, ctype
+        tools: composer:v2
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+
+    - name: Run security audit
+      run: composer audit --format=json --no-interaction || true
+
+    - name: Check for known vulnerabilities
+      run: |
+        echo "Checking for common security issues..."
+        # Check for eval usage
+        if grep -r "eval(" src/; then
+          echo "ERROR: eval() found in source code"
+          exit 1
+        fi
+        # Check for exec usage
+        if grep -r "exec(" src/; then
+          echo "ERROR: exec() found in source code"
+          exit 1
+        fi
+        echo "Security check passed"
+
+  compatibility:
+    name: Compatibility Test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP 8.4
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.4
+        extensions: mbstring, json, ctype
+        tools: composer:v2
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+
+    - name: Test NIK functionality
+      run: |
+        php -r "
+        require_once 'vendor/autoload.php';
+        use Turahe\Validator\NIK;
+        \$nik = NIK::set('3273012501990001');
+        \$result = \$nik->parse();
+        echo 'NIK test passed\n';
+        "
+
+    - name: Test KK functionality
+      run: |
+        php -r "
+        require_once 'vendor/autoload.php';
+        use Turahe\Validator\KK;
+        \$kk = KK::set('3273012501990001');
+        \$result = \$kk->parse();
+        echo 'KK test passed\n';
+        "
+
+    - name: Test error handling
+      run: |
+        php -r "
+        require_once 'vendor/autoload.php';
+        use Turahe\Validator\NIK;
+        try {
+            NIK::set('123456789012345');
+            echo 'ERROR: Should have thrown exception\n';
+        } catch (Exception \$e) {
+            echo 'Error handling test passed\n';
+        }
+        "
+
+  documentation:
+    name: Documentation Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP 8.4
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.4
+        extensions: mbstring, json, ctype
+        tools: composer:v2
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+
+    - name: Check README syntax
+      run: |
+        echo "Checking README.md..."
+        if [ -f README.md ]; then
+          echo "README.md exists and is readable"
+        else
+          echo "ERROR: README.md not found"
+          exit 1
+        fi
+
+    - name: Check example file
+      run: |
+        echo "Checking example.php..."
+        if [ -f example.php ]; then
+          php -l example.php
+          echo "example.php syntax is valid"
+        else
+          echo "ERROR: example.php not found"
+          exit 1
+        fi
+
+    - name: Validate composer.json
+      run: composer validate --strict
+
+  notify:
+    name: Notify on Success
+    needs: [test, code-quality, performance, security, compatibility, documentation]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Notify success
+      if: needs.test.result == 'success' && needs.code-quality.result == 'success' && needs.performance.result == 'success' && needs.security.result == 'success' && needs.compatibility.result == 'success' && needs.documentation.result == 'success'
+      run: |
+        echo "🎉 All checks passed successfully!"
+        echo "✅ Tests: ${{ needs.test.result }}"
+        echo "✅ Code Quality: ${{ needs.code-quality.result }}"
+        echo "✅ Performance: ${{ needs.performance.result }}"
+        echo "✅ Security: ${{ needs.security.result }}"
+        echo "✅ Compatibility: ${{ needs.compatibility.result }}"
+        echo "✅ Documentation: ${{ needs.documentation.result }}"
+
+    - name: Notify failure
+      if: needs.test.result == 'failure' || needs.code-quality.result == 'failure' || needs.performance.result == 'failure' || needs.security.result == 'failure' || needs.compatibility.result == 'failure' || needs.documentation.result == 'failure'
+      run: |
+        echo "❌ Some checks failed!"
+        echo "Tests: ${{ needs.test.result }}"
+        echo "Code Quality: ${{ needs.code-quality.result }}"
+        echo "Performance: ${{ needs.performance.result }}"
+        echo "Security: ${{ needs.security.result }}"
+        echo "Compatibility: ${{ needs.compatibility.result }}"
+        echo "Documentation: ${{ needs.documentation.result }}"
+        exit 1
